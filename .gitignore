@@ -48,3 +48,6 @@ yarn-error.*
 *.ipa
 /output/
 /build.apk
+
+# Keystore — never commit real keystore
+keystore.jks

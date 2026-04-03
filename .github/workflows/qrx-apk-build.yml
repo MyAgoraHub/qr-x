@@ -15,6 +15,9 @@ on:
           - production
           - development
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -90,9 +93,24 @@ jobs:
             c.android.keystore.keyPassword = process.env.KEY_PASSWORD;
             fs.writeFileSync(p, JSON.stringify(c, null, 2));
           "
-
-          # Fail fast with a clear error if the keystore or alias password is wrong.
-          keytool -list -keystore ./keystore.jks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null
+      
+      - name: Validate Keystore Credentials
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          set +x  # Disable bash debug mode to prevent password logging
+          
+          # Validate keystore can be opened with provided password
+          # Redirect stderr to suppress password in logs; only show sanitized error messages
+          if ! keytool -list -keystore ./keystore.jks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" 2>/dev/null >/dev/null; then
+            echo "❌ Error: Keystore validation failed"
+            echo "   Please verify:"
+            echo "   - KEYSTORE_PASSWORD is correct"
+            echo "   - KEY_ALIAS matches the key in the keystore"
+            exit 1
+          fi
+          echo "✅ Keystore credentials validated successfully"
         
       - name: Build Android APK
         run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --local --non-interactive --output ./build.apk
@@ -121,4 +139,4 @@ jobs:
           draft: false
           prerelease: false
         env:
-          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}

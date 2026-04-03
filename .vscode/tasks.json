@@ -1,0 +1,81 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "npm: run selected script",
+      "type": "shell",
+      "command": "npm",
+      "args": [
+        "run",
+        "${input:npmScript}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: start",
+      "type": "shell",
+      "command": "npm run start",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: expo start dev",
+      "type": "shell",
+      "command": "npm run expo:start:dev",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: android",
+      "type": "shell",
+      "command": "npm run android",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "npm: ota android (message)",
+      "type": "shell",
+      "command": "sh -c 'MESSAGE=\"${input:otaMessage}\" npm run expo:ota:android'",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": []
+    }
+  ],
+  "inputs": [
+    {
+      "id": "npmScript",
+      "type": "pickString",
+      "description": "Select npm script to run",
+      "options": [
+        "start",
+        "android",
+        "ios",
+        "web",
+        "expo:start:dev",
+        "expo:build:android:prod",
+        "expo:build:ios:prod",
+        "expo:build:preview:android",
+        "expo:build:preview:ios",
+        "expo:ota:android",
+        "expo:ota:ios"
+      ],
+      "default": "start"
+    },
+    {
+      "id": "otaMessage",
+      "type": "promptString",
+      "description": "OTA message for Android update",
+      "default": "OTA Update"
+    }
+  ]
+}

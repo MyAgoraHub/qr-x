@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ScanScreen, GenerateScreen, HistoryScreen, SettingsScreen, ActionHubScreen } from '../screens';
 import { Colors } from '../theme';
 import { AuthProvider, AppModeProvider, useAppMode } from '../context';
+import { SMART_QR_ENABLED } from '../config/features';
 
 const Tab = createBottomTabNavigator();
 
@@ -22,6 +23,7 @@ const ICON_MAP: Record<string, { default: keyof typeof Ionicons.glyphMap; focuse
 function TabNavigator() {
   const insets = useSafeAreaInsets();
   const { appMode } = useAppMode();
+  const currentMode = SMART_QR_ENABLED ? appMode : 'qrx';
 
   const screenOptions = ({ route }: any) => ({
     tabBarIcon: ({ focused, color, size }: any) => {
@@ -65,7 +67,7 @@ function TabNavigator() {
     },
   });
 
-  if (appMode === 'actionhub') {
+  if (currentMode === 'actionhub') {
     return (
       <Tab.Navigator screenOptions={screenOptions}>
         <Tab.Screen

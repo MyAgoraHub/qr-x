@@ -21,6 +21,7 @@ import { parseQRContent, addToHistory, getSettings, AppSettings } from '../utils
 import { QRCodeData } from '../types';
 import { actionHubApi } from '../services/api';
 import { ScanExecuteResponse } from '../types/actionHub';
+import { SMART_QR_ENABLED } from '../config/features';
 
 const { width } = Dimensions.get('window');
 const SCAN_AREA_SIZE = width * 0.7;
@@ -88,7 +89,7 @@ export function ScanScreen() {
     // If it's an Action Hub QR code, execute the scan (don't save to history)
     console.log('[ActionHub] Checking if actionhub type:', parsedData.type);
     console.log('[ActionHub] actionHubCode:', parsedData.parsed.actionHubCode);
-    if (parsedData.type === 'actionhub' && parsedData.parsed.actionHubCode) {
+    if (SMART_QR_ENABLED && parsedData.type === 'actionhub' && parsedData.parsed.actionHubCode) {
       console.log('[ActionHub] Calling executeActionHubScan...');
       executeActionHubScan(parsedData.parsed.actionHubCode);
     } else {
@@ -232,17 +233,14 @@ export function ScanScreen() {
             <Ionicons name="scan-outline" size={24} color={Colors.text} />
             <Text style={styles.startButtonText}>Start Scanning</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.actionHubHint}
-            onPress={() => navigation.navigate('Settings')}
-          >
+          <View style={styles.actionHubHint}>
             <Ionicons name="flash-outline" size={16} color={Colors.primary} />
             <Text style={styles.actionHubHintText}>
-              Want smart QR actions?{' '}
-              <Text style={styles.actionHubHintLink}>Enable Smart QR Actions in Settings</Text>
+              Smart QR Actions are coming soon.
+              {' '}
+              <Text style={styles.actionHubHintLink}>Stay tuned for the next release.</Text>
             </Text>
-            <Ionicons name="chevron-forward" size={14} color={Colors.primary} />
-          </TouchableOpacity>
+          </View>
         </View>
       </View>
     );

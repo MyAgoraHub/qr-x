@@ -1,0 +1,108 @@
+name: Build Expo App
+
+on:
+  push:
+    branches: [release/**]
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: false
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+          - development
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      
+      # Cache for faster builds
+      - name: Cache Expo and EAS
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            ~/.eas
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: ${{ runner.os }}-expo-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-expo-
+      
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+          
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Set app environment flags
+        run: |
+          PROFILE="${{ inputs.profile || 'preview' }}"
+          if [ "$PROFILE" = "production" ]; then
+            node -e "
+              const fs = require('fs');
+              const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+              app.expo.extra.isBeta = false;
+              app.expo.extra.environment = 'production';
+              fs.writeFileSync('app.json', JSON.stringify(app, null, 2));
+            "
+          else
+            node -e "
+              const fs = require('fs');
+              const app = JSON.parse(fs.readFileSync('app.json', 'utf8'));
+              app.expo.extra.isBeta = true;
+              app.expo.extra.environment = '$PROFILE';
+              fs.writeFileSync('app.json', JSON.stringify(app, null, 2));
+            "
+          fi
+        
+      - name: Decode Keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ./keystore.jks
+          sed -i 's|KEYSTORE_PASSWORD_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|' credentials.json
+          sed -i 's|KEY_ALIAS_PLACEHOLDER|${{ secrets.KEY_ALIAS }}|' credentials.json
+          sed -i 's|KEY_PASSWORD_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|' credentials.json
+        
+      - name: Build Android APK
+        run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --local --non-interactive --output ./build.apk
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+          GRADLE_OPTS: -Xmx8g -XX:MaxMetaspaceSize=1g -XX:+HeapDumpOnOutOfMemoryError -Dorg.gradle.jvmargs="-Xmx8g" -Dorg.gradle.daemon=false -Dorg.gradle.parallel=true -Dorg.gradle.caching=true
+        
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-release-${{ github.sha }}
+          path: ./build.apk
+          retention-days: 30
+      
+      # Add to GitHub Releases
+      - name: Extract version
+        id: version
+        run: echo "VERSION=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v.beta${{ steps.version.outputs.VERSION }}-${{ github.run_number }}
+          name: Release v.beta${{ steps.version.outputs.VERSION }}
+          files: ./build.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.ACCESS_TOKEN }}

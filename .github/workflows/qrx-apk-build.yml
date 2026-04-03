@@ -72,11 +72,27 @@ jobs:
           fi
         
       - name: Decode Keystore
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ./keystore.jks
-          sed -i 's|KEYSTORE_PASSWORD_PLACEHOLDER|${{ secrets.KEYSTORE_PASSWORD }}|' credentials.json
-          sed -i 's|KEY_ALIAS_PLACEHOLDER|${{ secrets.KEY_ALIAS }}|' credentials.json
-          sed -i 's|KEY_PASSWORD_PLACEHOLDER|${{ secrets.KEY_PASSWORD }}|' credentials.json
+          echo "$KEYSTORE_BASE64" | base64 -d > ./keystore.jks
+
+          # Inject signing values into credentials.json without fragile sed replacement.
+          node -e "
+            const fs = require('fs');
+            const p = 'credentials.json';
+            const c = JSON.parse(fs.readFileSync(p, 'utf8'));
+            c.android.keystore.keystorePassword = process.env.KEYSTORE_PASSWORD;
+            c.android.keystore.keyAlias = process.env.KEY_ALIAS;
+            c.android.keystore.keyPassword = process.env.KEY_PASSWORD;
+            fs.writeFileSync(p, JSON.stringify(c, null, 2));
+          "
+
+          # Fail fast with a clear error if the keystore or alias password is wrong.
+          keytool -list -keystore ./keystore.jks -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" > /dev/null
         
       - name: Build Android APK
         run: eas build --platform android --profile ${{ inputs.profile || 'preview' }} --local --non-interactive --output ./build.apk

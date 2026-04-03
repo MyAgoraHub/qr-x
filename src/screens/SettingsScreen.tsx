@@ -18,6 +18,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Colors, Spacing, Typography, BorderRadius } from '../theme';
 import { clearHistory, getSettings, saveSettings, AppSettings } from '../utils';
 import { useAppMode } from '../context';
+import { SMART_QR_ENABLED } from '../config/features';
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from './TermsOfServiceScreen';
 
@@ -197,12 +198,12 @@ export function SettingsScreen() {
             </Text>
             <Text style={styles.modeCardSubtitle}>Scanner &amp; Generator</Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.modeCard, appMode === 'actionhub' && styles.modeCardActive]}
-            onPress={async () => {
-              await setAppMode('actionhub');
-              navigation.navigate('ActionHub');
-            }}
+          <View
+            style={[
+              styles.modeCard,
+              appMode === 'actionhub' && styles.modeCardActive,
+              !SMART_QR_ENABLED && styles.modeCardDisabled,
+            ]}
           >
             <Ionicons
               name="flash"
@@ -213,7 +214,12 @@ export function SettingsScreen() {
               Smart QR
             </Text>
             <Text style={styles.modeCardSubtitle}>Action Hub</Text>
-          </TouchableOpacity>
+            {!SMART_QR_ENABLED && (
+              <View style={styles.comingSoonPill}>
+                <Text style={styles.comingSoonText}>COMING SOON</Text>
+              </View>
+            )}
+          </View>
         </View>
       </SettingsSection>
 
@@ -468,6 +474,9 @@ const styles = StyleSheet.create({
     borderColor: Colors.primary,
     backgroundColor: Colors.primary + '18',
   },
+  modeCardDisabled: {
+    opacity: 0.7,
+  },
   modeCardTitle: {
     ...Typography.body,
     fontWeight: 'bold' as const,
@@ -479,6 +488,21 @@ const styles = StyleSheet.create({
   modeCardSubtitle: {
     ...Typography.small,
     textAlign: 'center',
+  },
+  comingSoonPill: {
+    marginTop: Spacing.xs,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+    borderRadius: BorderRadius.full,
+    backgroundColor: Colors.warning + '2A',
+    borderWidth: 1,
+    borderColor: Colors.warning,
+  },
+  comingSoonText: {
+    fontSize: 10,
+    fontWeight: '700' as const,
+    color: Colors.warning,
+    letterSpacing: 0.7,
   },
   footer: {
     alignItems: 'center',

@@ -4,6 +4,56 @@ import * as Clipboard from 'expo-clipboard';
 import { Alert, Platform } from 'react-native';
 import { QRCodeData, QRContentType } from '../types';
 
+const GOOGLE_WALLET_SAVE_URL = /^https?:\/\/pay\.google\.com\/gp\/v\/save\//i;
+const GOOGLE_WALLET_GENERIC_URL = /^https?:\/\/(wallet\.google\.com|pay\.google\.com)\//i;
+const APPLE_WALLET_PASS_URL = /^https?:\/\/[^\s]+\.pkpass(?:\?.*)?$/i;
+const WALLET_DEEP_LINK = /^(wallet|applewallet|googlewallet):\/\//i;
+
+function resolveWalletUrl(data: QRCodeData): string | null {
+  const candidates = [data.parsed.url, data.raw]
+    .filter((value): value is string => Boolean(value?.trim()))
+    .map((value) => value.trim());
+
+  for (const candidate of candidates) {
+    if (
+      GOOGLE_WALLET_SAVE_URL.test(candidate) ||
+      GOOGLE_WALLET_GENERIC_URL.test(candidate) ||
+      APPLE_WALLET_PASS_URL.test(candidate) ||
+      WALLET_DEEP_LINK.test(candidate)
+    ) {
+      return candidate;
+    }
+  }
+
+  return null;
+}
+
+export function canAddToWallet(data: QRCodeData): boolean {
+  return resolveWalletUrl(data) !== null;
+}
+
+export async function addToWallet(data: QRCodeData): Promise<void> {
+  const walletUrl = resolveWalletUrl(data);
+
+  if (!walletUrl) {
+    Alert.alert('Unsupported', 'This QR code does not contain a wallet-compatible link.');
+    return;
+  }
+
+  try {
+    const supported = await Linking.canOpenURL(walletUrl);
+    if (supported) {
+      await Linking.openURL(walletUrl);
+      return;
+    }
+
+    Alert.alert('Unavailable', 'No compatible wallet app is available to open this link.');
+  } catch (error) {
+    console.error('Error opening wallet link:', error);
+    Alert.alert('Error', 'Failed to open wallet link.');
+  }
+}
+
 /**
  * Open URL in browser
  */
@@ -181,11 +231,30 @@ export function getActions(data: QRCodeData): Array<{
   
   switch (type) {
     case 'url':
+      if (canAddToWallet(data)) {
+        actions.push({
+          label: 'Add to Wallet',
+          icon: 'wallet-outline',
+          action: () => addToWallet(data),
+        });
+      }
+
       if (parsed.url) {
         actions.push({
           label: 'Open URL',
           icon: 'open-outline',
           action: () => openURL(parsed.url!),
+          primary: true,
+        });
+      }
+      break;
+
+    case 'text':
+      if (canAddToWallet(data)) {
+        actions.push({
+          label: 'Add to Wallet',
+          icon: 'wallet-outline',
+          action: () => addToWallet(data),
           primary: true,
         });
       }

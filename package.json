@@ -11,9 +11,9 @@
     "expo:build:ios:prod": "eas build --platform ios",
     "expo:build:preview:android": "eas build --platform android --profile preview",
     "expo:build:preview:ios": "eas build --platform ios --profile preview",
-    "expo:start:dev":"npx expo start --clear",
+    "expo:start:dev": "npx expo start --clear",
     "expo:ota:android": "sh -c 'eas update --platform android --message \"$0\"'",
-    "expo:ota:ios": "sh -c 'eas update --platform ios --message \"$0\"'" 
+    "expo:ota:ios": "sh -c 'eas update --platform ios --message \"$0\"'"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",
@@ -35,7 +35,7 @@
     "expo-navigation-bar": "^5.0.10",
     "expo-notifications": "~0.32.16",
     "expo-print": "~15.0.8",
-    "expo-sharing": "^14.0.8",
+    "expo-sharing": "~14.0.8",
     "expo-splash-screen": "~31.0.12",
     "expo-status-bar": "~3.0.9",
     "expo-updates": "~29.0.15",
@@ -46,7 +46,7 @@
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "~4.16.0",
     "react-native-svg": "15.12.1",
-    "react-native-view-shot": "^4.0.3"
+    "react-native-view-shot": "4.0.3"
   },
   "devDependencies": {
     "@types/react": "~19.1.0",

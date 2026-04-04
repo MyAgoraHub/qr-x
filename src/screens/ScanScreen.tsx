@@ -236,9 +236,11 @@ export function ScanScreen() {
           <View style={styles.actionHubHint}>
             <Ionicons name="flash-outline" size={16} color={Colors.primary} />
             <Text style={styles.actionHubHintText}>
-              Smart QR Actions are coming soon.
+              {SMART_QR_ENABLED ? 'Smart QR Actions are enabled.' : 'Smart QR Actions are coming soon.'}
               {' '}
-              <Text style={styles.actionHubHintLink}>Stay tuned for the next release.</Text>
+              <Text style={styles.actionHubHintLink}>
+                {SMART_QR_ENABLED ? 'Switch mode in Settings to use Action Hub.' : 'Stay tuned for the next release.'}
+              </Text>
             </Text>
           </View>
         </View>

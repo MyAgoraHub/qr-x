@@ -13,7 +13,9 @@
     "expo:build:preview:ios": "eas build --platform ios --profile preview",
     "expo:start:dev":"npx expo start --clear",
     "expo:ota:android": "sh -c 'eas update --platform android --message \"$0\"'",
-    "expo:ota:ios": "sh -c 'eas update --platform ios --message \"$0\"'" 
+    "expo:ota:ios": "sh -c 'eas update --platform ios --message \"$0\"'",
+    "git:disable:wf:build":"gh workflow disable qrx-apk-build.yml",
+    "git:enable:wf:build":"gh workflow enable qrx-apk-build.yml"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

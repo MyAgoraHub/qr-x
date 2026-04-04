@@ -17,8 +17,11 @@ import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
 import { ScanResult } from '../components';
-import { parseQRContent, addToHistory, getSettings, AppSettings } from '../utils';
+import { parseQRContent, addToHistory, getSettings, AppSettings, useDonationNudge } from '../utils';
 import { QRCodeData } from '../types';
+import { DonationScreen } from './DonationScreen';
+import { DonationCryptoScreen } from './DonationCryptoScreen';
+import { DonationFiatScreen } from './DonationFiatScreen';
 import { actionHubApi } from '../services/api';
 import { ScanExecuteResponse } from '../types/actionHub';
 import { SMART_QR_ENABLED } from '../config/features';
@@ -37,6 +40,9 @@ export function ScanScreen() {
   const [cameraActive, setCameraActive] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
+  const [showDonationCrypto, setShowDonationCrypto] = useState(false);
+  const [showDonationFiat, setShowDonationFiat] = useState(false);
+  const { showDonationNudge, trackAction, onNudgeDismissed } = useDonationNudge();
 
   // Load settings when screen focuses
   useFocusEffect(
@@ -95,6 +101,7 @@ export function ScanScreen() {
     } else {
       // Only save non-Action Hub QR codes to history
       await addToHistory(parsedData, 'scan');
+      await trackAction();
       console.log('[ActionHub] NOT an actionhub QR or missing code');
     }
   };
@@ -313,6 +320,38 @@ export function ScanScreen() {
             onScanAgain={handleScanAgain}
           />
         )}
+      </Modal>
+
+      {/* Donation Nudge Modal */}
+      <Modal
+        visible={showDonationNudge && !showDonationCrypto && !showDonationFiat}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={onNudgeDismissed}
+      >
+        <DonationScreen
+          onClose={onNudgeDismissed}
+          onSelectCrypto={() => { onNudgeDismissed(); setShowDonationCrypto(true); }}
+          onSelectFiat={() => { onNudgeDismissed(); setShowDonationFiat(true); }}
+        />
+      </Modal>
+
+      <Modal
+        visible={showDonationCrypto}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDonationCrypto(false)}
+      >
+        <DonationCryptoScreen onClose={() => setShowDonationCrypto(false)} />
+      </Modal>
+
+      <Modal
+        visible={showDonationFiat}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDonationFiat(false)}
+      >
+        <DonationFiatScreen onClose={() => setShowDonationFiat(false)} />
       </Modal>
     </View>
   );

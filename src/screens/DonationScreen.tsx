@@ -5,10 +5,12 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
+import { acknowledgeDonation } from '../utils/storage';
 
 interface DonationScreenProps {
   onClose: () => void;
@@ -22,6 +24,12 @@ export function DonationScreen({
   onSelectFiat,
 }: DonationScreenProps) {
   const insets = useSafeAreaInsets();
+
+  const handleAlreadyDonated = async () => {
+    await acknowledgeDonation();
+    Alert.alert('Thank You! ❤️', 'You are a legend. The donation reminder will not show again.');
+    onClose();
+  };
 
   return (
     <View
@@ -116,6 +124,15 @@ export function DonationScreen({
             shared with third parties beyond what's necessary for payment processing.
           </Text>
         </View>
+
+        {/* Already Donated */}
+        <TouchableOpacity
+          style={styles.alreadyDonatedButton}
+          onPress={handleAlreadyDonated}
+        >
+          <Ionicons name="heart" size={18} color={Colors.warning} />
+          <Text style={styles.alreadyDonatedText}>I've Already Donated ❤️</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
@@ -232,5 +249,19 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     flex: 1,
     lineHeight: 18,
+  },
+  alreadyDonatedButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.sm,
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.xl,
+    paddingVertical: Spacing.md,
+  },
+  alreadyDonatedText: {
+    ...Typography.caption,
+    color: Colors.textMuted,
+    textDecorationLine: 'underline',
   },
 });

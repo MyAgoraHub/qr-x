@@ -198,12 +198,17 @@ export function SettingsScreen() {
             </Text>
             <Text style={styles.modeCardSubtitle}>Scanner &amp; Generator</Text>
           </TouchableOpacity>
-          <View
+          <TouchableOpacity
             style={[
               styles.modeCard,
               appMode === 'actionhub' && styles.modeCardActive,
               !SMART_QR_ENABLED && styles.modeCardDisabled,
             ]}
+            disabled={!SMART_QR_ENABLED}
+            onPress={async () => {
+              if (!SMART_QR_ENABLED) return;
+              await setAppMode('actionhub');
+            }}
           >
             <Ionicons
               name="flash"
@@ -219,7 +224,7 @@ export function SettingsScreen() {
                 <Text style={styles.comingSoonText}>COMING SOON</Text>
               </View>
             )}
-          </View>
+          </TouchableOpacity>
         </View>
       </SettingsSection>
 

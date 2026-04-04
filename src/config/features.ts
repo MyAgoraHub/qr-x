@@ -1,1 +1,1 @@
-export const SMART_QR_ENABLED = false;
+export const SMART_QR_ENABLED = true;

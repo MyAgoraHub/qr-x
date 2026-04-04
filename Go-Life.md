@@ -1,8 +1,11 @@
 # 🚀 Google Play Store Deployment Guide
-### QR Master — Advanced QR Code Scanning, Creating & Classification
+### QR-X — Advanced QR Code Scanning, Creating & Classification
 
 > A complete step-by-step guide to publishing your QR app on the Google Play Store,
 > from zero setup to live listing.
+
+> **This project uses Expo + EAS Build.** Many manual Android/Gradle steps are
+> replaced by EAS commands. Each phase notes what's already handled.
 
 ---
 
@@ -30,18 +33,18 @@ Track your progress before submission:
 | Item | Details | Done |
 |---|---|---|
 | Google Developer Account | $25 one-time fee | ⬜ |
-| Release keystore created & backed up | `.jks` file + passwords stored safely | ⬜ |
-| Signed AAB or APK ready | Release build, not debug | ⬜ |
-| `debuggable false` confirmed | In `AndroidManifest.xml` | ⬜ |
-| Version name & code set | e.g. `1.0.0` / `1` | ⬜ |
-| App icon (512×512 PNG) | No alpha on corners | ⬜ |
-| Feature graphic (1024×500 PNG/JPG) | Banner shown on store page | ⬜ |
+| Release keystore created & backed up | Run `eas credentials` or create `.jks` — `credentials.json` currently has placeholder values | ⬜ |
+| Signed AAB ready | Run `eas build --platform android --profile production` | ⬜ |
+| `debuggable false` confirmed | ✅ Expo/EAS production builds set this automatically | ✅ |
+| Version name & code set | ✅ `1.0.0` in `app.json`; `appVersionSource: remote` + `autoIncrement: true` in `eas.json` | ✅ |
+| App icon (512×512 PNG) | ⚠️ `assets/android-icon-512.png` is 512×512 but has **alpha channel (RGBA)** — Play Store requires no alpha. Export a flat PNG. | ⚠️ |
+| Feature graphic (1024×500 PNG/JPG) | Banner shown on store page — not yet created | ⬜ |
 | Screenshots (min. 2, up to 8) | Phone screenshots required | ⬜ |
 | Short description written | Max 80 characters | ⬜ |
 | Full description written | Max 4,000 characters | ⬜ |
-| Privacy Policy URL live | Hosted publicly | ⬜ |
+| Privacy Policy URL live | Screen exists in-app (`PrivacyPolicyScreen.tsx`) but needs a hosted public URL | ⬜ |
 | Content rating questionnaire done | IARC rating | ⬜ |
-| Data Safety form completed | All permissions declared | ⬜ |
+| Data Safety form completed | All permissions declared in `app.json` already | ⬜ |
 | Release notes written | "What's new" for v1.0 | ⬜ |
 
 ---
@@ -66,68 +69,90 @@ Track your progress before submission:
 Google **strongly prefers** Android App Bundles (`.aab`) over APKs since August 2021.
 AABs are smaller for end users and required for new apps on Play.
 
-### Step 1 — Create a Release Keystore
+> ✅ **This project uses Expo + EAS Build.** You do NOT need Gradle, Android Studio,
+> or manual keystore commands. EAS handles signing, AAB generation, version incrementing,
+> and `debuggable false` automatically.
+
+### Step 1 — Set Up Signing Credentials
 
 > ⚠️ **CRITICAL:** Back up your keystore file and passwords somewhere safe (e.g. password
 > manager + cloud backup). If you lose it, you can **never update your app** on Play.
 
+`credentials.json` exists in the repo but currently has **placeholder values**. You have two options:
+
+**Option A — Let EAS manage credentials (recommended):**
 ```bash
-keytool -genkey -v \
-  -keystore my-release-key.jks \
-  -keyalg RSA \
-  -keysize 2048 \
-  -validity 10000 \
-  -alias my-key-alias
+eas credentials
+# Choose Android → production → set up new keystore
+# EAS stores it securely in Expo servers
 ```
 
-You'll be prompted for:
-- Keystore password
-- Your name, org, city, country
-- Key password
+**Option B — Use a local keystore (already wired via `credentials.json`):**
+```bash
+# Generate a keystore manually once:
+keytool -genkey -v \
+  -keystore keystore.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias my-key-alias
 
-### Step 2 — Sign Your Build
+# Then fill in credentials.json with real values:
+# keystorePath, keystorePassword, keyAlias, keyPassword
+```
+> The `preview` profile in `eas.json` uses `credentialsSource: local` — it will read
+> `credentials.json` directly. The `production` profile defaults to EAS-managed.
 
-In `android/app/build.gradle`:
+### Step 2 — Build Your Release AAB
+
+```bash
+# Production build (uploads to EAS, autoIncrements version code)
+eas build --platform android --profile production
+
+# Or preview build (local credentials, internal distribution)
+eas build --platform android --profile preview
+```
+
+EAS outputs a signed `.aab` file. Download it from the EAS dashboard or use
+`eas submit` to send directly to Play Store.
+
+### Step 3 — Verify Before Upload
+
+- [x] `debuggable false` — set automatically by EAS for non-development profiles
+- [x] Version code auto-incremented — `autoIncrement: true` in `eas.json` production profile
+- [x] Version name `1.0.0` — set in `app.json`
+- [ ] No test credentials or API keys hardcoded — review before building
+- [ ] `credentials.json` has real values (not placeholders)
+
+### (Reference) Manual Gradle approach — not needed with EAS
+
+<details>
+<summary>Show legacy Gradle/keytool instructions</summary>
+
+```bash
+# Keytool (manual)
+keytool -genkey -v -keystore my-release-key.jks -keyalg RSA -keysize 2048 -validity 10000 -alias my-key-alias
+```
 
 ```groovy
+// android/app/build.gradle
 android {
-    signingConfigs {
-        release {
-            storeFile file("my-release-key.jks")
-            storePassword "YOUR_STORE_PASSWORD"
-            keyAlias "my-key-alias"
-            keyPassword "YOUR_KEY_PASSWORD"
-        }
-    }
-    buildTypes {
-        release {
-            signingConfig signingConfigs.release
-            minifyEnabled true
-            debuggable false
-        }
-    }
+    signingConfigs { release { ... } }
+    buildTypes { release { signingConfig signingConfigs.release; minifyEnabled true; debuggable false } }
 }
 ```
 
-### Step 3 — Build Your Release AAB
-
 ```bash
-# With Gradle
 ./gradlew bundleRelease
-
 # Output: app/build/outputs/bundle/release/app-release.aab
 ```
 
-### Step 4 — Verify Before Upload
-
-- [ ] `debuggable false` is set
-- [ ] No test credentials or API keys hardcoded
-- [ ] Version code incremented from any previous build
-- [ ] Version name is correct (e.g. `1.0.0`)
+</details>
 
 ---
 
 ## 🏪 Phase 3 — Store Listing
+
+> ✅ App name is set to **"QR-X"** in `app.json`. The suggestions below are alternatives
+> if you want a more descriptive Play Store title (you can differ from the `app.json` name).
 
 ### App Name Suggestions
 
@@ -136,6 +161,7 @@ android {
 | 1 | QR Master — Scan, Create & Classify |
 | 2 | QRify — Scanner & Generator |
 | 3 | SmartQR — Scan, Create, Manage |
+| 4 | **QR-X — Scan, Create & Classify** ← current `app.json` name |
 
 ### Short Description (80 chars max)
 
@@ -182,11 +208,14 @@ Download SmartQR and take control of your QR code world.
 |---|---|
 | Primary Category | Tools |
 | Tags | Productivity, Utilities |
-| Free or Paid | Free (or Paid — your choice) |
+| Free or Paid | Free (donation-supported — no ads) |
 
 ---
 
 ## 🔐 Phase 4 — Permissions & Data Safety
+
+> ✅ All permissions below are already declared in `app.json` under `android.permissions`
+> and the Expo plugin configs. No manual `AndroidManifest.xml` edits needed.
 
 ### Permissions Your App Likely Uses
 
@@ -199,6 +228,9 @@ Download SmartQR and take control of your QR code world.
 | `CHANGE_WIFI_STATE` | Auto-connect via WiFi QR | Medium — must justify |
 | `READ_CONTACTS` *(if used)* | vCard QR auto-fill | High — avoid if possible |
 | `SEND_SMS` *(avoid)* | Only use Intent, not direct send | Very High — likely rejection |
+
+> ✅ SMS is handled via `expo-linking` with `sms:` URI scheme — no `SEND_SMS` permission
+> is used or declared. Safe from this rejection risk.
 
 > ⚠️ **For SMS:** Never use the `SEND_SMS` permission directly. Instead, launch the
 > system SMS app using an `Intent`. This avoids a high-risk permission flag:
@@ -226,6 +258,8 @@ Download SmartQR and take control of your QR code world.
 
 ## 📊 Phase 5 — Content Rating
 
+> ⬜ **TODO:** Complete the IARC questionnaire in Play Console.
+
 Complete the **IARC questionnaire** in Play Console under *Policy → App Content*.
 
 | Category | Your Answer |
@@ -242,11 +276,18 @@ Complete the **IARC questionnaire** in Play Console under *Policy → App Conten
 > 💡 If your crypto feature only reads/displays wallet addresses and doesn't process
 > payments, you can answer **No** to financial transactions.
 
+> ✅ The donation feature displays crypto addresses only — no payments are processed
+> in-app. Answer **No** to financial transactions.
+
 ---
 
 ## 🛡️ Phase 6 — Privacy Policy
 
 A **Privacy Policy is mandatory** — even for simple apps. It must be publicly hosted.
+
+> ⚠️ **Partially done:** `PrivacyPolicyScreen.tsx` exists in the app and covers all
+> required topics. You still need to **host it publicly** (e.g. GitHub Pages) and
+> submit the URL to Play Console. The in-app screen alone does not satisfy this requirement.
 
 ### Free Generators
 
@@ -266,18 +307,24 @@ A **Privacy Policy is mandatory** — even for simple apps. It must be publicly 
 - **WiFi credentials:** Used only to connect; never stored or transmitted
 - **Crypto addresses:** Displayed only; no financial processing
 - **No third-party data sharing**
-- **No advertising SDKs** (if applicable)
+- **No advertising SDKs** ✅ (no ads — donation-supported)
 - **User data deletion:** User can clear scan history in-app
 
 ---
 
 ## 📸 Phase 7 — Screenshots & Graphics
 
+> ⬜ **TODO:** All assets below still need to be created.
+
+> ⚠️ **Icon alpha channel:** `assets/android-icon-512.png` is 512×512 but exported as
+> **RGBA (has alpha)**. Google Play rejects icons with transparency. Re-export it as a
+> flat RGB PNG with the dark background `#0F0F1A` baked in.
+
 ### Required Assets
 
 | Asset | Size | Format | Notes |
 |---|---|---|---|
-| App Icon | 512×512 px | PNG (no alpha) | High-res, shown in search |
+| App Icon | 512×512 px | PNG (no alpha) | ⚠️ Re-export `android-icon-512.png` as flat RGB |
 | Feature Graphic | 1024×500 px | PNG or JPG | Banner on store page |
 | Phone Screenshots | Min 1080×1920 px | PNG or JPG | Min 2, up to 8 |
 | Tablet Screenshots *(optional)* | Min 1200×1920 px | PNG or JPG | Recommended |
@@ -326,21 +373,25 @@ QR code maker          scan QR code          QR code app
 
 ## ⬆️ Phase 9 — Upload & Release
 
+> ✅ You can use `eas submit` to upload directly from EAS to Play Console instead of
+> manually uploading the `.aab` file.
+
 ### In Play Console:
 
 1. Open your app → **Release → Production**
 2. Click **"Create new release"**
-3. Upload your signed `.aab` file
+3. Upload your signed `.aab` file (or use `eas submit --platform android --profile production`)
 4. Write **release notes** (what's new):
 
 ```
-Welcome to SmartQR v1.0!
+Welcome to QR-X v1.0!
 
 • Instant QR scanning with smart classification
 • Supports 10+ QR types: URL, SMS, Email, Phone, WiFi, Crypto, vCard & more
 • Built-in QR code generator for all types
 • Full scan history with type filtering
 • Lightning-fast and fully offline
+• Donation-supported — no ads, ever
 ```
 
 5. Choose your rollout strategy:
@@ -392,12 +443,32 @@ Watch out for these common rejection reasons specific to your app:
 |---|---|
 | Google Play Console | https://play.google.com/console |
 | Play Policy Centre | https://play.google.com/about/developer-content-policy |
-| App signing docs | https://developer.android.com/studio/publish/app-signing |
+| EAS Build docs | https://docs.expo.dev/build/introduction/ |
+| EAS Submit docs | https://docs.expo.dev/submit/introduction/ |
+| EAS Credentials docs | https://docs.expo.dev/app-signing/managed-credentials/ |
+| App signing docs (reference) | https://developer.android.com/studio/publish/app-signing |
 | Data Safety guidance | https://support.google.com/googleplay/android-developer/answer/10787469 |
 | Privacy Policy Generator | https://app-privacy-policy-generator.firebaseapp.com |
 | Screenshot mockups | https://screenshots.pro |
 
 ---
+
+## 🚧 EAS Todo Summary
+
+Quick reference of what's left to do with Expo/EAS before submitting:
+
+| Task | Command / Action |
+|---|---|
+| Set up signing credentials | `eas credentials` (or fill `credentials.json` + add `keystore.jks`) |
+| Build production AAB | `eas build --platform android --profile production` |
+| Submit to Play Console | `eas submit --platform android --profile production` |
+| Fix icon alpha channel | Re-export `assets/android-icon-512.png` as flat RGB PNG |
+| Host Privacy Policy | Deploy `PrivacyPolicyScreen` content to GitHub Pages or similar |
+| Create feature graphic | 1024×500 px banner for Play Store listing |
+| Take screenshots | Min 2 phone screenshots (see Phase 7 for recommended flow) |
+| Fill store listing | Short description, full description, category in Play Console |
+| Complete IARC questionnaire | Play Console → Policy → App Content |
+| Complete Data Safety form | Play Console → Policy → Data Safety |
 
 *Generated for QR Master — Advanced QR Scanning, Creating & Classification App*
 *Covers: SMS • Email • Phone • WiFi • Crypto • URL • vCard • and more*

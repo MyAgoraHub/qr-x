@@ -11,7 +11,7 @@ import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
 import { HistoryItem } from '../types';
-import { getTypeLabel, getTypeIcon, canAddToWallet, addToWallet } from '../utils';
+import { getTypeLabel, getTypeIcon, canAddToWallet, addToWallet, openMaps } from '../utils';
 
 interface HistoryCardProps {
   item: HistoryItem;
@@ -30,6 +30,15 @@ export function HistoryCard({
   const typeColor = Colors.typeColors[data.type] || Colors.textSecondary;
   const viewShotRef = useRef<ViewShot>(null);
   const walletSupported = canAddToWallet(data);
+  const canOpenMap =
+    data.type === 'geo' &&
+    data.parsed.latitude !== undefined &&
+    data.parsed.longitude !== undefined;
+
+  const handleOpenMap = async () => {
+    if (!canOpenMap) return;
+    await openMaps(data.parsed.latitude!, data.parsed.longitude!);
+  };
   
   const handleShare = async () => {
     try {
@@ -126,12 +135,32 @@ export function HistoryCard({
           </View>
         </View>
         
-        <Text style={styles.text} numberOfLines={2}>
-          {getDisplayText()}
-        </Text>
+        {canOpenMap ? (
+          <Text
+            style={[styles.text, styles.mapText]}
+            numberOfLines={2}
+            onPress={handleOpenMap}
+          >
+            {getDisplayText()}
+          </Text>
+        ) : (
+          <Text style={styles.text} numberOfLines={2}>
+            {getDisplayText()}
+          </Text>
+        )}
       </View>
       
       <View style={styles.actions}>
+        {canOpenMap && (
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={handleOpenMap}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="map-outline" size={20} color={typeColor} />
+          </TouchableOpacity>
+        )}
+
         {walletSupported && (
           <TouchableOpacity
             style={styles.actionButton}
@@ -227,6 +256,10 @@ const styles = StyleSheet.create({
   text: {
     ...Typography.body,
     color: Colors.text,
+  },
+  mapText: {
+    textDecorationLine: 'underline',
+    color: Colors.secondary,
   },
   actions: {
     justifyContent: 'center',

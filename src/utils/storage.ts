@@ -184,3 +184,41 @@ export async function getFavorites(): Promise<HistoryItem[]> {
   const history = await getHistory();
   return history.filter(item => item.isFavorite);
 }
+
+// ─── Donation Nudge ─────────────────────────────────────────────────────────
+
+const ACTION_COUNT_KEY = '@qrx_action_count';
+const DONATION_ACKNOWLEDGED_KEY = '@qrx_donation_acknowledged';
+const DONATION_NUDGE_INTERVAL = 10;
+
+/**
+ * Increment action count and return whether the donation screen should show.
+ * Returns false immediately if the user has already acknowledged a donation.
+ */
+export async function incrementActionCount(): Promise<boolean> {
+  try {
+    const acknowledged = await AsyncStorage.getItem(DONATION_ACKNOWLEDGED_KEY);
+    if (acknowledged === 'true') return false;
+
+    const raw = await AsyncStorage.getItem(ACTION_COUNT_KEY);
+    const current = raw ? parseInt(raw, 10) : 0;
+    const next = current + 1;
+    await AsyncStorage.setItem(ACTION_COUNT_KEY, String(next));
+
+    return next % DONATION_NUDGE_INTERVAL === 0;
+  } catch (error) {
+    console.error('Error incrementing action count:', error);
+    return false;
+  }
+}
+
+/**
+ * Permanently silence the donation nudge (user acknowledged a donation).
+ */
+export async function acknowledgeDonation(): Promise<void> {
+  try {
+    await AsyncStorage.setItem(DONATION_ACKNOWLEDGED_KEY, 'true');
+  } catch (error) {
+    console.error('Error acknowledging donation:', error);
+  }
+}

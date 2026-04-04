@@ -8,13 +8,18 @@ import {
   TouchableOpacity,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import ViewShot from 'react-native-view-shot';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
 import { QRCodeDisplay, saveQRCode, shareQRCode, Button } from '../components';
-import { generateQRContent, addToHistory, parseQRContent } from '../utils';
+import { generateQRContent, addToHistory, parseQRContent, useDonationNudge } from '../utils';
 import { QRContentType, ParsedQRData } from '../types';
+import { DonationScreen } from './DonationScreen';
+import { DonationCryptoScreen } from './DonationCryptoScreen';
+import { DonationFiatScreen } from './DonationFiatScreen';
 
 type GeneratorTab = QRContentType;
 
@@ -36,12 +41,16 @@ const TABS: TabItem[] = [
 ];
 
 export function GenerateScreen() {
+  const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState<GeneratorTab>('text');
   const [formData, setFormData] = useState<ParsedQRData>({});
   const [qrValue, setQrValue] = useState<string>('');
   const [generated, setGenerated] = useState(false);
   const viewShotRef = useRef<ViewShot>(null);
   const scrollViewRef = useRef<ScrollView>(null);
+  const [showDonationCrypto, setShowDonationCrypto] = useState(false);
+  const [showDonationFiat, setShowDonationFiat] = useState(false);
+  const { showDonationNudge, trackAction, onNudgeDismissed } = useDonationNudge();
 
   const updateFormData = (key: keyof ParsedQRData, value: string) => {
     setFormData(prev => ({ ...prev, [key]: value }));
@@ -57,7 +66,8 @@ export function GenerateScreen() {
       // Add to history
       const parsed = parseQRContent(content);
       await addToHistory(parsed, 'generate');
-      
+      await trackAction();
+
       // Scroll down to show the QR code
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
@@ -361,6 +371,38 @@ export function GenerateScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* Donation Nudge Modal */}
+      <Modal
+        visible={showDonationNudge && !showDonationCrypto && !showDonationFiat}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={onNudgeDismissed}
+      >
+        <DonationScreen
+          onClose={onNudgeDismissed}
+          onSelectCrypto={() => { onNudgeDismissed(); setShowDonationCrypto(true); }}
+          onSelectFiat={() => { onNudgeDismissed(); setShowDonationFiat(true); }}
+        />
+      </Modal>
+
+      <Modal
+        visible={showDonationCrypto}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDonationCrypto(false)}
+      >
+        <DonationCryptoScreen onClose={() => setShowDonationCrypto(false)} />
+      </Modal>
+
+      <Modal
+        visible={showDonationFiat}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDonationFiat(false)}
+      >
+        <DonationFiatScreen onClose={() => setShowDonationFiat(false)} />
+      </Modal>
     </KeyboardAvoidingView>
   );
 }

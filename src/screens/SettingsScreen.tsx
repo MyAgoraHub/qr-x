@@ -21,12 +21,18 @@ import { useAppMode } from '../context';
 import { SMART_QR_ENABLED } from '../config/features';
 import { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
 import { TermsOfServiceScreen } from './TermsOfServiceScreen';
+import { DonationScreen } from './DonationScreen';
+import { DonationCryptoScreen } from './DonationCryptoScreen';
+import { DonationFiatScreen } from './DonationFiatScreen';
 
 export function SettingsScreen() {
   const { appMode, setAppMode } = useAppMode();
   const navigation = useNavigation<any>();
   const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
   const [showTermsOfService, setShowTermsOfService] = useState(false);
+  const [showDonation, setShowDonation] = useState(false);
+  const [showDonationCrypto, setShowDonationCrypto] = useState(false);
+  const [showDonationFiat, setShowDonationFiat] = useState(false);
   const [settings, setSettings] = useState<AppSettings>({
     autoOpenCamera: false,
     autoFlash: false,
@@ -94,6 +100,26 @@ export function SettingsScreen() {
     setShowPrivacyPolicy(true);
   };
 
+
+  const handleDonate = () => {
+    setShowDonation(true);
+  };
+
+  const handleDonationCrypto = () => {
+    setShowDonation(false);
+    setShowDonationCrypto(true);
+  };
+
+  const handleDonationFiat = () => {
+    setShowDonation(false);
+    setShowDonationFiat(true);
+  };
+
+  const closeDonationScreens = () => {
+    setShowDonation(false);
+    setShowDonationCrypto(false);
+    setShowDonationFiat(false);
+  };
   const handleTermsOfService = () => {
     setShowTermsOfService(true);
   };
@@ -300,6 +326,14 @@ export function SettingsScreen() {
         />
       </SettingsSection>
 
+      <SettingsSection title="Support Us">
+        <SettingsItem
+          icon="heart-outline"
+          label="Donate"
+          onPress={handleDonate}
+        />
+      </SettingsSection>
+
       <SettingsSection title="Legal">
         <SettingsItem
           icon="document-text-outline"
@@ -340,6 +374,46 @@ export function SettingsScreen() {
       >
         <View style={{ flex: 1, paddingTop: insets.top }}>
           <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
+        </View>
+      </Modal>
+
+      {/* Donation Options Modal */}
+      <Modal
+        visible={showDonation}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowDonation(false)}
+      >
+        <View style={{ flex: 1, paddingTop: insets.top }}>
+          <DonationScreen
+            onClose={() => setShowDonation(false)}
+            onSelectCrypto={handleDonationCrypto}
+            onSelectFiat={handleDonationFiat}
+          />
+        </View>
+      </Modal>
+
+      {/* Donation Crypto Modal */}
+      <Modal
+        visible={showDonationCrypto}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => closeDonationScreens()}
+      >
+        <View style={{ flex: 1, paddingTop: insets.top }}>
+          <DonationCryptoScreen onClose={() => closeDonationScreens()} />
+        </View>
+      </Modal>
+
+      {/* Donation Fiat Modal */}
+      <Modal
+        visible={showDonationFiat}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => closeDonationScreens()}
+      >
+        <View style={{ flex: 1, paddingTop: insets.top }}>
+          <DonationFiatScreen onClose={() => closeDonationScreens()} />
         </View>
       </Modal>
     </ScrollView>

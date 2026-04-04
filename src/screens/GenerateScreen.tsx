@@ -34,6 +34,8 @@ const TABS: TabItem[] = [
   { type: 'url', label: 'URL', icon: 'link-outline' },
   { type: 'contact', label: 'Contact', icon: 'person-outline' },
   { type: 'wifi', label: 'WiFi', icon: 'wifi-outline' },
+  { type: 'geo', label: 'Location', icon: 'location-outline' },
+  { type: 'calendar', label: 'Event', icon: 'calendar-outline' },
   { type: 'crypto', label: 'Crypto', icon: 'wallet-outline' },
   { type: 'email', label: 'Email', icon: 'mail-outline' },
   { type: 'phone', label: 'Phone', icon: 'call-outline' },
@@ -210,6 +212,65 @@ export function GenerateScreen() {
                 ))}
               </View>
             </View>
+          </View>
+        );
+
+      case 'geo':
+        return (
+          <View style={styles.formContainer}>
+            <FormInput
+              label="Latitude"
+              placeholder="e.g. -33.9249"
+              value={formData.latitude?.toString() || ''}
+              onChangeText={(value) => updateFormData('latitude', value)}
+              keyboardType="numeric"
+            />
+            <FormInput
+              label="Longitude"
+              placeholder="e.g. 18.4241"
+              value={formData.longitude?.toString() || ''}
+              onChangeText={(value) => updateFormData('longitude', value)}
+              keyboardType="numeric"
+            />
+          </View>
+        );
+
+      case 'calendar':
+        return (
+          <View style={styles.formContainer}>
+            <FormInput
+              label="Event Title"
+              placeholder="Team Sync"
+              value={formData.eventTitle || ''}
+              onChangeText={(value) => updateFormData('eventTitle', value)}
+            />
+            <FormInput
+              label="Start (iCal format)"
+              placeholder="20260404T140000Z"
+              value={formData.eventStart || ''}
+              onChangeText={(value) => updateFormData('eventStart', value)}
+              autoCapitalize="none"
+            />
+            <FormInput
+              label="End (iCal format)"
+              placeholder="20260404T150000Z"
+              value={formData.eventEnd || ''}
+              onChangeText={(value) => updateFormData('eventEnd', value)}
+              autoCapitalize="none"
+            />
+            <FormInput
+              label="Location"
+              placeholder="Cape Town, ZA"
+              value={formData.eventLocation || ''}
+              onChangeText={(value) => updateFormData('eventLocation', value)}
+            />
+            <FormInput
+              label="Description"
+              placeholder="Optional event details"
+              value={formData.eventDescription || ''}
+              onChangeText={(value) => updateFormData('eventDescription', value)}
+              multiline
+            />
           </View>
         );
 
@@ -413,7 +474,7 @@ interface FormInputProps {
   value: string;
   onChangeText: (text: string) => void;
   multiline?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url';
+  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url' | 'numeric';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   isPassword?: boolean;
 }

@@ -258,6 +258,8 @@ export function HistoryScreen() {
         <CategoryButton type="url" label="URL" icon="link-outline" />
         <CategoryButton type="contact" label="Contact" icon="person-outline" />
         <CategoryButton type="wifi" label="WiFi" icon="wifi-outline" />
+        <CategoryButton type="geo" label="Location" icon="location-outline" />
+        <CategoryButton type="calendar" label="Event" icon="calendar-outline" />
         <CategoryButton type="crypto" label="Crypto" icon="wallet-outline" />
         <CategoryButton type="text" label="Text" icon="document-text-outline" />
       </View>

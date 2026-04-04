@@ -31,6 +31,7 @@ export const Colors = {
     geo: '#10B981',
     calendar: '#A855F7',
     crypto: '#F7931A',
+    actionhub: '#22D3EE',
     text: '#94A3B8',
   },
 };

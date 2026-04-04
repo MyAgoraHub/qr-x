@@ -11,7 +11,7 @@ import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
 import { HistoryItem } from '../types';
-import { getTypeLabel, getTypeIcon } from '../utils';
+import { getTypeLabel, getTypeIcon, canAddToWallet, addToWallet } from '../utils';
 
 interface HistoryCardProps {
   item: HistoryItem;
@@ -29,6 +29,7 @@ export function HistoryCard({
   const { data, isFavorite, source } = item;
   const typeColor = Colors.typeColors[data.type] || Colors.textSecondary;
   const viewShotRef = useRef<ViewShot>(null);
+  const walletSupported = canAddToWallet(data);
   
   const handleShare = async () => {
     try {
@@ -131,6 +132,16 @@ export function HistoryCard({
       </View>
       
       <View style={styles.actions}>
+        {walletSupported && (
+          <TouchableOpacity
+            style={styles.actionButton}
+            onPress={() => addToWallet(data)}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
+            <Ionicons name="wallet-outline" size={20} color={Colors.success} />
+          </TouchableOpacity>
+        )}
+
         <TouchableOpacity
           style={styles.actionButton}
           onPress={handleShare}

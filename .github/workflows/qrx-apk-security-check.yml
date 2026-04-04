@@ -1,0 +1,37 @@
+name: QR-X Secret Scanning
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+    branches: ["**"]
+
+jobs:
+  gitleaks:
+    name: Detect secrets (Gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history so Gitleaks can diff every commit in the push
+
+      - name: Run Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  output-folder-guard:
+    name: Block committed output/ files
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail if output/ directory is tracked
+        run: |
+          if git ls-files --error-unmatch output/ 2>/dev/null; then
+            echo "::error::The output/ directory contains tracked files. It must stay in .gitignore — it may contain inlined secrets from generate-portainer-stack.js."
+            exit 1
+          fi
+          echo "✅ output/ is not tracked."

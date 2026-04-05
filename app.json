@@ -19,7 +19,8 @@
         "NSCameraUsageDescription": "QR-X needs camera access to scan QR codes",
         "NSContactsUsageDescription": "QR-X needs contacts access to save contact information from QR codes",
         "NSPhotoLibraryAddUsageDescription": "QR-X needs photo library access to save generated QR codes",
-        "NSPhotoLibraryUsageDescription": "QR-X needs photo library access to save and share QR codes"
+        "NSPhotoLibraryUsageDescription": "QR-X needs photo library access to save and share QR codes",
+        "NSLocationWhenInUseUsageDescription": "QR-X uses your location to generate a location QR code."
       }
     },
     "android": {
@@ -80,7 +81,13 @@
         }
       ],
       "expo-contacts",
-      "expo-notifications"
+      "expo-notifications",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "QR-X uses your location to generate a location QR code."
+        }
+      ]
     ],
     "extra": {
       "isBeta": true,

@@ -215,64 +215,25 @@ export function GenerateScreen() {
           </View>
         );
 
-      case 'geo':
+      case 'geo': {
+        const LocationForm = require('../components/forms/LocationForm').default;
         return (
-          <View style={styles.formContainer}>
-            <FormInput
-              label="Latitude"
-              placeholder="e.g. -33.9249"
-              value={formData.latitude?.toString() || ''}
-              onChangeText={(value) => updateFormData('latitude', value)}
-              keyboardType="numeric"
-            />
-            <FormInput
-              label="Longitude"
-              placeholder="e.g. 18.4241"
-              value={formData.longitude?.toString() || ''}
-              onChangeText={(value) => updateFormData('longitude', value)}
-              keyboardType="numeric"
-            />
-          </View>
+          <LocationForm
+            onDataChange={setFormData}
+            initialData={formData}
+          />
         );
+      }
 
-      case 'calendar':
+      case 'calendar': {
+        const CalendarForm = require('../components/forms/CalendarForm').default;
         return (
-          <View style={styles.formContainer}>
-            <FormInput
-              label="Event Title"
-              placeholder="Team Sync"
-              value={formData.eventTitle || ''}
-              onChangeText={(value) => updateFormData('eventTitle', value)}
-            />
-            <FormInput
-              label="Start (iCal format)"
-              placeholder="20260404T140000Z"
-              value={formData.eventStart || ''}
-              onChangeText={(value) => updateFormData('eventStart', value)}
-              autoCapitalize="none"
-            />
-            <FormInput
-              label="End (iCal format)"
-              placeholder="20260404T150000Z"
-              value={formData.eventEnd || ''}
-              onChangeText={(value) => updateFormData('eventEnd', value)}
-              autoCapitalize="none"
-            />
-            <FormInput
-              label="Location"
-              placeholder="Cape Town, ZA"
-              value={formData.eventLocation || ''}
-              onChangeText={(value) => updateFormData('eventLocation', value)}
-            />
-            <FormInput
-              label="Description"
-              placeholder="Optional event details"
-              value={formData.eventDescription || ''}
-              onChangeText={(value) => updateFormData('eventDescription', value)}
-              multiline
-            />
-          </View>
+          <CalendarForm
+            onDataChange={setFormData}
+            initialData={formData}
+          />
         );
+      }
 
       case 'crypto':
         const CryptoForm = require('../components/forms/CryptoForm').default;
@@ -474,7 +435,7 @@ interface FormInputProps {
   value: string;
   onChangeText: (text: string) => void;
   multiline?: boolean;
-  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url' | 'numeric';
+  keyboardType?: 'default' | 'email-address' | 'phone-pad' | 'url';
   autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   isPassword?: boolean;
 }

@@ -12,12 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
-import QRCode from 'react-native-qrcode-svg';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import * as MediaLibrary from 'expo-media-library';
 import { Colors, Spacing, Typography, BorderRadius } from '../theme';
-import { HistoryCard, ScanResult } from '../components';
+import { HistoryCard, ScanResult, QRCodeDisplay } from '../components';
 import {
   getHistory,
   toggleFavorite,
@@ -341,16 +340,12 @@ export function HistoryScreen() {
               </TouchableOpacity>
 
               {/* QR Code */}
-              <ViewShot ref={qrViewShotRef} options={{ format: 'png', quality: 1 }}>
-                <View style={styles.qrCodeWrapper}>
-                  <QRCode
-                    value={qrPreviewItem.data.raw || ' '}
-                    size={qrSize}
-                    backgroundColor="white"
-                    color="black"
-                  />
-                </View>
-              </ViewShot>
+              <QRCodeDisplay
+                ref={qrViewShotRef}
+                value={qrPreviewItem.data.raw || ' '}
+                size={qrSize}
+                contentType={qrPreviewItem.data.type as QRContentType}
+              />
 
               {/* Content Preview */}
               <Text style={styles.qrModalLabel} numberOfLines={2}>

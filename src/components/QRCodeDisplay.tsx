@@ -6,7 +6,24 @@ import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 import * as Sharing from 'expo-sharing';
 import { Alert } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors, Spacing, BorderRadius } from '../theme';
+import { QRContentType } from '../types';
+
+const ICON_BLUE = '#3B82F6';
+
+const TYPE_META: Record<string, { icon: string }> = {
+  text:     { icon: 'document-text-sharp' },
+  url:      { icon: 'globe-sharp' },
+  contact:  { icon: 'person-sharp' },
+  wifi:     { icon: 'wifi-sharp' },
+  geo:      { icon: 'location-sharp' },
+  calendar: { icon: 'calendar-sharp' },
+  crypto:   { icon: 'logo-bitcoin' },
+  email:    { icon: 'mail-sharp' },
+  phone:    { icon: 'call-sharp' },
+  sms:      { icon: 'chatbubbles-sharp' },
+};
 
 interface QRCodeDisplayProps {
   value: string;
@@ -16,36 +33,75 @@ interface QRCodeDisplayProps {
   logo?: any;
   logoSize?: number;
   onCapture?: (uri: string) => void;
+  contentType?: QRContentType;
 }
 
 export const QRCodeDisplay = React.forwardRef<ViewShot, QRCodeDisplayProps>(
   (
     {
       value,
-      size = 200,
+      size = 220,
       backgroundColor = '#FFFFFF',
-      color = '#000000',
+      color,
       logo,
       logoSize = 40,
+      contentType,
     },
     ref
   ) => {
+    const meta = contentType ? TYPE_META[contentType] : undefined;
+    const dotColor  = color ?? '#000000';
+    const iconName  = meta?.icon ?? 'qr-code-sharp';
+    const iconContainerSize = Math.round(size * 0.22);
+
     return (
       <ViewShot
         ref={ref}
         options={{ format: 'png', quality: 1 }}
         style={styles.container}
       >
-        <View style={[styles.qrWrapper, { backgroundColor }]}>
-          <QRCode
-            value={value || ' '}
-            size={size}
-            backgroundColor={backgroundColor}
-            color={color}
-            logo={logo}
-            logoSize={logoSize}
-            logoBackgroundColor={backgroundColor}
-          />
+        {/* Outer card with blue glow border */}
+        <View style={[styles.card, { shadowColor: ICON_BLUE, borderColor: ICON_BLUE + '55' }]}>
+          {/* Accent strip at top */}
+          <View style={[styles.accentStrip, { backgroundColor: ICON_BLUE }]} />
+
+          {/* QR code area */}
+          <View style={[styles.qrWrapper, { backgroundColor }]}>
+            <QRCode
+              value={value || ' '}
+              size={size}
+              backgroundColor={backgroundColor}
+              color={dotColor}
+              ecl="H"
+              logo={logo}
+              logoSize={logo ? logoSize : 0}
+              logoBackgroundColor={backgroundColor}
+            />
+
+            {/* Centered icon overlay (only when no custom logo) */}
+            {!logo && (
+              <View
+                style={[
+                  styles.iconOverlay,
+                  {
+                    width: iconContainerSize,
+                    height: iconContainerSize,
+                    borderRadius: Math.round(iconContainerSize * 0.28),
+                  },
+                ]}
+                pointerEvents="none"
+              >
+                <Ionicons
+                  name={iconName as any}
+                  size={Math.round(iconContainerSize * 0.58)}
+                  color={ICON_BLUE}
+                />
+              </View>
+            )}
+          </View>
+
+          {/* Accent strip at bottom */}
+          <View style={[styles.accentStrip, { backgroundColor: ICON_BLUE }]} />
         </View>
       </ViewShot>
     );
@@ -149,8 +205,36 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  card: {
+    borderRadius: BorderRadius.xl,
+    overflow: 'hidden',
+    borderWidth: 1.5,
+    // Shadow (iOS)
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    // Elevation (Android)
+    elevation: 10,
+  },
+  accentStrip: {
+    height: 4,
+    width: '100%',
+  },
   qrWrapper: {
     padding: Spacing.lg,
-    borderRadius: BorderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconOverlay: {
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    // subtle drop shadow so it lifts off the QR pattern
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.15,
+    shadowRadius: 3,
+    elevation: 3,
   },
 });

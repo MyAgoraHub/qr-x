@@ -372,6 +372,7 @@ export function GenerateScreen() {
               ref={viewShotRef}
               value={qrValue}
               size={200}
+              contentType={activeTab}
             />
             
             <View style={styles.qrActions}>

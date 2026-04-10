@@ -6,11 +6,11 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import QRCode from 'react-native-qrcode-svg';
 import ViewShot from 'react-native-view-shot';
 import * as Sharing from 'expo-sharing';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
 import { HistoryItem } from '../types';
+import { QRCodeDisplay } from './QRCodeDisplay';
 import { getTypeLabel, getTypeIcon, canAddToWallet, addToWallet, openMaps } from '../utils';
 
 interface HistoryCardProps {
@@ -100,16 +100,12 @@ export function HistoryCard({
       
       {/* QR Code Preview */}
       <View style={styles.qrPreview}>
-        <ViewShot ref={viewShotRef} options={{ format: 'png', quality: 1 }}>
-          <View style={styles.qrContainer}>
-            <QRCode
-              value={data.raw || ' '}
-              size={48}
-              backgroundColor="white"
-              color="black"
-            />
-          </View>
-        </ViewShot>
+        <QRCodeDisplay
+          ref={viewShotRef}
+          value={data.raw || ' '}
+          size={48}
+          contentType={data.type}
+        />
       </View>
       
       <View style={styles.content}>
@@ -219,11 +215,6 @@ const styles = StyleSheet.create({
   },
   qrPreview: {
     padding: Spacing.sm,
-  },
-  qrContainer: {
-    backgroundColor: 'white',
-    padding: 4,
-    borderRadius: BorderRadius.sm,
   },
   content: {
     flex: 1,

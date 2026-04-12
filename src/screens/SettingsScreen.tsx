@@ -19,8 +19,6 @@ import { Colors, Spacing, Typography, BorderRadius } from '../theme';
 import { clearHistory, getSettings, saveSettings, AppSettings } from '../utils';
 import { useAppMode } from '../context';
 import { SMART_QR_ENABLED } from '../config/features';
-import { PrivacyPolicyScreen } from './PrivacyPolicyScreen';
-import { TermsOfServiceScreen } from './TermsOfServiceScreen';
 import { DonationScreen } from './DonationScreen';
 import { DonationCryptoScreen } from './DonationCryptoScreen';
 import { DonationFiatScreen } from './DonationFiatScreen';
@@ -28,8 +26,6 @@ import { DonationFiatScreen } from './DonationFiatScreen';
 export function SettingsScreen() {
   const { appMode, setAppMode } = useAppMode();
   const navigation = useNavigation<any>();
-  const [showPrivacyPolicy, setShowPrivacyPolicy] = useState(false);
-  const [showTermsOfService, setShowTermsOfService] = useState(false);
   const [showDonation, setShowDonation] = useState(false);
   const [showDonationCrypto, setShowDonationCrypto] = useState(false);
   const [showDonationFiat, setShowDonationFiat] = useState(false);
@@ -74,30 +70,25 @@ export function SettingsScreen() {
   };
 
   const handleRateApp = () => {
-    // Play Store URL for QR-X
     const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.qrx.app';
-    
-    Linking.canOpenURL(PLAY_STORE_URL)
-      .then((supported) => {
-        if (supported) {
-          Linking.openURL(PLAY_STORE_URL);
-        } else {
-          Alert.alert(
-            'Rate App', 
-            'Unable to open Play Store. The app will be available soon!'
-          );
-        }
-      })
-      .catch(() => {
-        Alert.alert(
-          'Rate App',
-          'Unable to open Play Store. Thank you for your support!'
-        );
-      });
+    Alert.alert(
+      'Enjoying QR-X? ⭐',
+      'Your rating helps us grow and improve. It only takes a second!',
+      [
+        { text: 'Not Now', style: 'cancel' },
+        {
+          text: 'Rate on Play Store',
+          onPress: () =>
+            Linking.openURL(PLAY_STORE_URL).catch(() =>
+              Alert.alert('Error', 'Unable to open the Play Store. Please try again later.')
+            ),
+        },
+      ]
+    );
   };
 
   const handlePrivacyPolicy = () => {
-    setShowPrivacyPolicy(true);
+    Linking.openURL('https://myagorahub.github.io/qr-x-wiki/legal/privacy-policy');
   };
 
 
@@ -121,7 +112,7 @@ export function SettingsScreen() {
     setShowDonationFiat(false);
   };
   const handleTermsOfService = () => {
-    setShowTermsOfService(true);
+    Linking.openURL('https://myagorahub.github.io/qr-x-wiki/legal/terms-of-service');
   };
 
   const SettingsSection = ({
@@ -186,22 +177,18 @@ export function SettingsScreen() {
           <Ionicons name="qr-code" size={48} color={Colors.primary} />
         </View>
         <Text style={styles.appName}>QR-X</Text>
-        <Text style={styles.appVersion}>
-          Version {Constants.expoConfig?.version || '1.0.0'}
-        </Text>
-        <View style={styles.badgeRow}>
-          {Constants.expoConfig?.extra?.isBeta && (
-            <View style={[styles.badge, styles.badgeBeta]}>
-              <Text style={styles.badgeText}>BETA</Text>
-            </View>
-          )}
-          {Constants.expoConfig?.extra?.environment && (
-            <View style={[styles.badge, styles.badgeEnv]}>
-              <Text style={styles.badgeText}>
-                {String(Constants.expoConfig.extra.environment).toUpperCase()}
-              </Text>
-            </View>
-          )}
+        <View style={styles.versionBadge}>
+          <Ionicons name="checkmark-circle" size={13} color={Colors.primary} />
+          <Text style={styles.versionBadgeText}>
+            v{Constants.expoConfig?.version || '1.0.0'}
+          </Text>
+        </View>
+        <View style={styles.buildInfoRow}>
+          <Text style={styles.buildInfoText}>
+            Build {Application.nativeBuildVersion || '1'}
+          </Text>
+          <View style={styles.buildInfoDot} />
+          <Text style={styles.buildInfoText}>Android</Text>
         </View>
       </View>
 
@@ -296,11 +283,6 @@ export function SettingsScreen() {
 
       <SettingsSection title="Data">
         <SettingsItem
-          icon="cloud-download-outline"
-          label="Export History"
-          onPress={() => Alert.alert('Coming Soon', 'Export feature is coming soon!')}
-        />
-        <SettingsItem
           icon="trash-outline"
           label="Clear All Data"
           onPress={handleClearHistory}
@@ -322,7 +304,7 @@ export function SettingsScreen() {
         <SettingsItem
           icon="help-circle-outline"
           label="Help Center"
-          onPress={() => Alert.alert('Coming Soon', 'Help center is coming soon!')}
+          onPress={() => Linking.openURL('https://myagorahub.github.io/qr-x-wiki/')}
         />
       </SettingsSection>
 
@@ -352,30 +334,6 @@ export function SettingsScreen() {
         <Text style={styles.footerText}>Made with ❤️ for QR enthusiasts</Text>
         <Text style={styles.footerCopyright}>© 2025 QR-X</Text>
       </View>
-
-      {/* Privacy Policy Modal */}
-      <Modal
-        visible={showPrivacyPolicy}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowPrivacyPolicy(false)}
-      >
-        <View style={{ flex: 1, paddingTop: insets.top }}>
-          <PrivacyPolicyScreen onClose={() => setShowPrivacyPolicy(false)} />
-        </View>
-      </Modal>
-
-      {/* Terms of Service Modal */}
-      <Modal
-        visible={showTermsOfService}
-        animationType="slide"
-        presentationStyle="pageSheet"
-        onRequestClose={() => setShowTermsOfService(false)}
-      >
-        <View style={{ flex: 1, paddingTop: insets.top }}>
-          <TermsOfServiceScreen onClose={() => setShowTermsOfService(false)} />
-        </View>
-      </Modal>
 
       {/* Donation Options Modal */}
       <Modal
@@ -445,34 +403,39 @@ const styles = StyleSheet.create({
     ...Typography.h2,
     marginBottom: Spacing.xs,
   },
-  appVersion: {
-    ...Typography.caption,
-  },
-  badgeRow: {
+  versionBadge: {
     flexDirection: 'row',
-    gap: Spacing.xs,
-    marginTop: Spacing.sm,
-  },
-  badge: {
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 3,
+    alignItems: 'center',
+    gap: 4,
+    marginTop: Spacing.xs,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: 5,
     borderRadius: BorderRadius.full,
-  },
-  badgeBeta: {
-    backgroundColor: Colors.warning + '30',
+    backgroundColor: Colors.primary + '18',
     borderWidth: 1,
-    borderColor: Colors.warning,
+    borderColor: Colors.primary + '40',
   },
-  badgeEnv: {
-    backgroundColor: Colors.secondary + '20',
-    borderWidth: 1,
-    borderColor: Colors.secondary,
+  versionBadgeText: {
+    fontSize: 13,
+    fontWeight: '600' as const,
+    color: Colors.primary,
+    letterSpacing: 0.3,
   },
-  badgeText: {
-    fontSize: 10,
-    fontWeight: '700' as const,
-    color: Colors.text,
-    letterSpacing: 0.8,
+  buildInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.xs,
+    marginTop: Spacing.xs,
+  },
+  buildInfoText: {
+    ...Typography.small,
+    color: Colors.textMuted,
+  },
+  buildInfoDot: {
+    width: 3,
+    height: 3,
+    borderRadius: 2,
+    backgroundColor: Colors.textMuted,
   },
   section: {
     marginBottom: Spacing.lg,

@@ -77,7 +77,7 @@ export default function LocationForm({ onDataChange, initialData }: LocationForm
         )}&format=json&limit=5&addressdetails=1`,
         {
           headers: {
-            'User-Agent': 'QR-X App (com.qrx.app)',
+            'User-Agent': 'QR-X App (io.myagorahub.qrx.app)',
             Accept: 'application/json',
           },
         }

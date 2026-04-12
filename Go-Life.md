@@ -14,6 +14,7 @@ This document tracks release readiness for the Android Play Store launch.
 ### 1. Store Listing
 
 - [x] App name finalized: QR-X
+- [x] Package name set: `io.myagorahub.qrx.app`
 - [x] Feature graphic uploaded (1024x500)
 - [x] Phone screenshots uploaded (minimum 2)
 - [x] Short description drafted (max 80 chars)

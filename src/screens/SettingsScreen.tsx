@@ -70,7 +70,7 @@ export function SettingsScreen() {
   };
 
   const handleRateApp = () => {
-    const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.qrx.app';
+    const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=io.myagorahub.qrx.app';
     Alert.alert(
       'Enjoying QR-X? ⭐',
       'Your rating helps us grow and improve. It only takes a second!',

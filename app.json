@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.qrx.app",
+      "bundleIdentifier": "io.myagorahub.qrx.app",
       "infoPlist": {
         "NSCameraUsageDescription": "QR-X needs camera access to scan QR codes",
         "NSContactsUsageDescription": "QR-X needs contacts access to save contact information from QR codes",
@@ -24,7 +24,7 @@
       }
     },
     "android": {
-      "package": "com.qrx.app",
+      "package": "io.myagorahub.qrx.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0F0F1A"

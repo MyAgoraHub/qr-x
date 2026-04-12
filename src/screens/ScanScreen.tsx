@@ -9,10 +9,11 @@ import {
   Alert,
   ActivityIndicator,
   Platform,
+  AppState,
 } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Ionicons } from '@expo/vector-icons';
-import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { useFocusEffect, useIsFocused, useNavigation } from '@react-navigation/native';
 import * as Clipboard from 'expo-clipboard';
 import * as Linking from 'expo-linking';
 import { Colors, Spacing, BorderRadius, Typography } from '../theme';
@@ -31,6 +32,7 @@ const SCAN_AREA_SIZE = width * 0.7;
 
 export function ScanScreen() {
   const navigation = useNavigation<any>();
+  const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanned, setScanned] = useState(false);
   const [scanData, setScanData] = useState<QRCodeData | null>(null);
@@ -38,32 +40,47 @@ export function ScanScreen() {
   const [actionHubResult, setActionHubResult] = useState<ScanExecuteResponse | null>(null);
   const [flashOn, setFlashOn] = useState(false);
   const [cameraActive, setCameraActive] = useState(false);
-  const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [appSettings, setAppSettings] = useState<AppSettings | null>(null);
   const [showDonationCrypto, setShowDonationCrypto] = useState(false);
   const [showDonationFiat, setShowDonationFiat] = useState(false);
   const { showDonationNudge, trackAction, onNudgeDismissed } = useDonationNudge();
 
-  // Load settings when screen focuses
+  // Handle app state changes: close camera on background, re-open on foreground if autoOpenCamera is on
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'background' || nextState === 'inactive') {
+        setCameraActive(false);
+        setFlashOn(false);
+      } else if (nextState === 'active' && isFocused) {
+        setAppSettings(prev => {
+          if (prev?.autoOpenCamera) {
+            setCameraActive(true);
+            if (prev.autoFlash) setFlashOn(true);
+          }
+          return prev;
+        });
+      }
+    });
+    return () => subscription.remove();
+  }, [isFocused]);
+
+  // Load settings and apply autoOpenCamera every time screen focuses
   useFocusEffect(
     useCallback(() => {
       const loadSettings = async () => {
         const settings = await getSettings();
         setAppSettings(settings);
-        if (!settingsLoaded) {
-          setCameraActive(settings.autoOpenCamera);
-          setFlashOn(settings.autoFlash);
-          setSettingsLoaded(true);
-        }
+        setCameraActive(settings.autoOpenCamera);
+        setFlashOn(settings.autoFlash);
       };
       loadSettings();
-      
+
       // Cleanup: Stop camera when screen loses focus
       return () => {
         setCameraActive(false);
         setFlashOn(false);
       };
-    }, [settingsLoaded])
+    }, [])
   );
 
   const handleBarCodeScanned = async (scanResult: any) => {
